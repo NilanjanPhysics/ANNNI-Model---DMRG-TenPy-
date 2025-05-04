@@ -77,15 +77,15 @@ dmrg_params = {
     'min_sweeps': 5,
 }
 
-############################# Worker function for one parameter set #######################
+############################ DMRG Calculation of Ground State ##############################
+params = {'L': L, 'Jx': -1, 'Jxp': k_vals, 'hz': h_vals, 'bc_MPS': 'finite', 'conserve': 'best'}
+model = SpinChainNNN2(params)                                                          #### Model Definition
+psi_guess = MPS.from_product_state(model.lat.mps_sites(), ['up'] * L, 'finite')        #### Guessed Psi
+eng = SingleSiteDMRGEngine(psi_guess, model, dmrg_params)                            
+E, psi_final = eng.run()                                                               #### Compute Energy and Psi_final after DMRG
+
+############################# Worker function for one parameter set ########################
 def Run_friedel(r):
-    params = {'L': L, 'Jx': -1, 'Jxp': k_vals, 'hz': h_vals, 'bc_MPS': 'finite', 'conserve': 'best'}
-    model = SpinChainNNN2(params)                                                          #### Model Definition
-    
-    psi_guess = MPS.from_product_state(model.lat.mps_sites(), ['up'] * L, 'finite')        #### Guessed Psi
-    eng = SingleSiteDMRGEngine(psi_guess, model, dmrg_params)                            
-    E, psi_final = eng.run()                                                               #### Compute Energy and Psi_final after DMRG
-    
     corr = psi_final.correlation_function('Sigmax', 'Sigmax', [0], [r-1]).item()           #### Compute Correlation Function
     return corr
 
@@ -114,8 +114,7 @@ def Parallel_DMRG():
     return np.array(corr_list)                        # just return correlations in order
 
 
-
-######## Execute and extract arrays at module import #######
+###################### Execute and extract arrays at module import ########################
 def _Initialize():
     global corr_arr
     corr_arr = Parallel_DMRG()
